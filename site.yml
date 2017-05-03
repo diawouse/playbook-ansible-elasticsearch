@@ -1,0 +1,3 @@
+- hosts: local
+  roles:
+    - {role: elasticsearch , tags: [infra, online-infra]}
