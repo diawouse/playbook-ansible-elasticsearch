@@ -1,0 +1,56 @@
+# ======================== Elasticsearch PHENIX Configuration =========================
+#
+# NOTE: Elasticsearch comes with reasonable defaults for most settings.
+#       Before you set out to tweak and tune the configuration, make sure you
+#       understand what are you trying to accomplish and the consequences.
+#
+# The primary way of configuring a node is via this file. This template lists
+# the most important settings you may want to configure for a production cluster.
+#
+# Please see the documentation for further information on configuration options:
+# <http://www.elastic.co/guide/en/elasticsearch/reference/current/setup-configuration.html>
+#
+# ---------------------------------- Cluster Configurations-----------------------------------
+#
+# Use name and unicast for cluster:
+#
+cluster.name: {{ es_cluster_name }}
+node.name: {{ private_hostname }}
+discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.unicast.hosts: [{% set comma = joiner(",") %}{% for host in groups['elasticsearch'] %}{{ comma() }}"{{ host }}"{% endfor %}]
+
+node.rack_id: {{ hostvars[inventory_hostname].rack }}
+cluster.routing.allocation.awareness.attributes: rack_id
+
+########### PATH #####################
+# DATA
+path.data: {% set comma = joiner(",") %}{% for path in es_data_dir %}{{ comma() }}{{ path }}{% endfor %}
+
+# LOGS
+
+path.logs: {{ es_logs_dir }}
+
+# ---------------------------------- Network -----------------------------------
+#
+# Set the bind adress to a specific IP (IPv4 or IPv6):
+#
+network.bind_host: 0.0.0.0
+network.publish_host: {{ inventory_hostname }}
+#
+# ---------------------------------- Index -----------------------------------
+#
+index.mapper.dynamic: false
+
+index.number_of_replicas: {{ es_number_replicas }}
+
+# disable delete all indices
+action.disable_delete_all_indices: true
+
+# bulk configuration
+threadpool.bulk.queue_size: {{ groups['elasticsearch']|length * 2 * 100 }}
+
+# Disable refresh
+index.refresh_interval: -1
+
+# Enable script on aggregations
+script.engine.groovy.inline.aggs: true
