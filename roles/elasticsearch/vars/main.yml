@@ -1,0 +1,9 @@
+---
+elasticsearch_version: 2.1.1
+es_data_dir:
+  - /home/ubuntu/data/elasticsearch
+es_logs_dir: /var/log/elasticsearch
+es_bin_dir: "/usr/share/elasticsearch/bin"
+es_plugin_dir: "/usr/share/elasticsearch/plugins"
+es_plugin_repo: "{{ third_parties_packages_repository }}/elasticsearch"
+service_name: elasticsearch
