@@ -1,0 +1,38 @@
+---
+- name: install elasticsearch
+  shell: dpkg -i /home/ubuntu/repo/elasticsearch-5.3.0.deb
+
+- name: create elasticsearch log dir
+  file: path={{ item }} state=directory owner=elasticsearch group=elasticsearch mode=0755
+  with_items: "{{ es_logs_dir }}"
+
+#- name: Setup elasticsearch yml
+#  template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml owner=ubuntu group=ubuntu mode=0644
+
+#- name: Deploy elasticsearch environment configurations
+#  template: src=elasticsearch.j2 dest=/etc/sysconfig/elasticsearch mode=0644
+#  notify: Restart elasticsearch
+
+- name: Start elasticsearch services
+  service: name=elasticsearch state=started enabled=yes
+
+- name: Wait for elasticsearch to launch services
+  wait_for:  port={{ item }} delay=5 timeout=60
+  with_items:
+     - "{{ es_api_port }}"
+     - "{{ es_transport_port }}"
+
+- name: check cluster status
+  shell: "curl --silent -X GET http://localhost:{{ es_api_port }}/_cluster/health?pretty=true |  jq '.status'  | tr -d '\"'"
+  #register: cluster_status
+  #failed_when: '"{{ elasticsearch_status }}" not in cluster_status.stdout'
+  #run_once: true
+
+- name: Test if head is installed
+  stat: path={{ es_plugin_dir }}/head
+  register: head
+
+- name: Install head plugin
+  shell: "{{ es_bin_dir }}/plugin install http://{{ es_plugin_repo }}/head.zip"
+  when: head.stat.isdir is not defined
+  ignore_errors: yes
